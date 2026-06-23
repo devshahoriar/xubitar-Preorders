@@ -10,7 +10,7 @@
 3. **Set up the database**:
    ```bash
    pnpm db:push
-   pnpm db:generate
+   pnpm prisma generate
    ```
 
 ## Running the Application
