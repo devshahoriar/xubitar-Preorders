@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import preorderFormSchema from "@/components/page/preorder/formSchema";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,11 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { api } from "@/trpc/react";
 import { useForm, useStore } from "@tanstack/react-form";
 import { ChevronLeft, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { api } from "@/trpc/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect } from "react";
+import { toast } from "sonner";
 
 const preOrdersDF = {
   name: "",
@@ -32,7 +32,7 @@ const preOrdersDF = {
   isActive: true,
 };
 
-export default function PreorderPage() {
+function PreorderPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("id");
@@ -92,7 +92,6 @@ export default function PreorderPage() {
     },
   });
 
-
   const isDirty = useStore(form.store, (state) => state.isDirty);
 
   useEffect(() => {
@@ -146,9 +145,7 @@ export default function PreorderPage() {
             type="submit"
             form="preorder-form"
             className="cursor-pointer font-semibold"
-            disabled={
-              loading || !isDirty
-            }
+            disabled={loading || !isDirty}
           >
             {createPreorder.isPending || editPreorder.isPending
               ? "Saving..."
@@ -519,5 +516,14 @@ export default function PreorderPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+// if use useSearchParams than need it
+export default function PreOrderSuspense() {
+  return (
+    <Suspense fallback={null}>
+      <PreorderPage />
+    </Suspense>
   );
 }
