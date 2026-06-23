@@ -1,10 +1,10 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { api } from "@/trpc/react";
+import { api, type RouterOutputs } from "@/trpc/react";
 import { Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -17,6 +17,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { usePerOrderSelect } from "./usePreOrderSelect";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export function TableAction({ id, name }: { id: string; name: string }) {
   const router = useRouter();
@@ -60,7 +62,8 @@ export function TableAction({ id, name }: { id: string; name: string }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Preorder</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the preorder <strong>{name}</strong>? This action cannot be undone.
+              Are you sure you want to delete the preorder{" "}
+              <strong>{name}</strong>? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -85,10 +88,10 @@ export function StatusUpdateSwitch({
   isActive: boolean;
   id: string;
 }) {
-  const router = useRouter()
+  const router = useRouter();
   const editPreorder = api.preorder.edit.useMutation({
     onSuccess: () => {
-      router.refresh()
+      router.refresh();
       toast.success("Preorder updated successfully!");
     },
     onError: (err) => {
@@ -101,11 +104,62 @@ export function StatusUpdateSwitch({
   return (
     <Switch
       disabled={editPreorder?.isPending}
-
       checked={isActive}
       onCheckedChange={(checked) =>
         editPreorder.mutate({ id, isActive: checked })
       }
     />
+  );
+}
+
+export function SelectAllCheckBox ({
+  preOrders,
+}: {
+  preOrders: RouterOutputs["preorder"]["getAll"]["preorders"];
+})  {
+  const { select, selectedIds } = usePerOrderSelect();
+
+  return (
+    <div className="flex items-center justify-center">
+      <Checkbox
+        checked={
+          Array.isArray(preOrders) &&
+          preOrders.length > 0 &&
+          preOrders.every((preorder) => selectedIds.has(preorder.id))
+        }
+        onCheckedChange={(checked) => {
+          if (checked) {
+            const ids = preOrders.map((preorder) => preorder.id);
+            select(ids);
+          } else {
+            const ids = preOrders.map((preorder) => preorder.id);
+            select(ids);
+          }
+        }}
+      />
+    </div>
+  );
+};
+
+export function SelectSingleCheckBox({
+  id,
+}: {
+  id: string;
+}) {
+  const { select, selectedIds } = usePerOrderSelect();
+
+  return (
+    <div className="flex items-center justify-center">
+      <Checkbox
+        checked={selectedIds.has(id)}
+        onCheckedChange={(checked) => {
+          if (checked) {
+            select(id);
+          } else {
+            select(id);
+          }
+        }}
+      />
+    </div>
   );
 }

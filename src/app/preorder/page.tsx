@@ -18,11 +18,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useForm } from "@tanstack/react-form";
-import { ChevronLeft } from "lucide-react";
-import Link from "next/link";
+import { ChevronLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { useRouter, useSearchParams } from "next/navigation";
+
+const preOrdersDF = {
+  name: "",
+  products: 1,
+  preorderWhen: "regardless-of-stock" as "regardless-of-stock" | "out-of-stock",
+  startsAt: new Date().toISOString().slice(0, 16),
+  endsAt: "",
+  isActive: true,
+};
 
 export default function PreorderPage() {
   const router = useRouter();
@@ -66,20 +74,15 @@ export default function PreorderPage() {
     },
   });
 
+  const loading =
+    isLoading || createPreorder.isPending || editPreorder.isPending;
+
   const form = useForm({
-    defaultValues: {
-      name: "",
-      products: 1,
-      preorderWhen: "regardless-of-stock" as
-        | "regardless-of-stock"
-        | "out-of-stock",
-      startsAt: new Date().toISOString().slice(0, 16),
-      endsAt: "",
-      isActive: true,
-    },
+    defaultValues: preOrdersDF,
     validators: {
       onChange: preorderFormSchema,
     },
+
     onSubmit: async ({ value }) => {
       if (editId) {
         await editPreorder.mutateAsync({ id: editId, ...value });
@@ -111,6 +114,11 @@ export default function PreorderPage() {
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <Loader2 className="h-8 w-8 animate-spin text-white" />
+        </div>
+      )}
       {/* Top Action Bar */}
       <div className="mb-6 flex items-center justify-between">
         <div>
@@ -498,9 +506,7 @@ export default function PreorderPage() {
             type="submit"
             form="preorder-form"
             className="cursor-pointer font-semibold"
-            disabled={
-              createPreorder.isPending || editPreorder.isPending || isLoading
-            }
+            disabled={loading}
           >
             {createPreorder.isPending || editPreorder.isPending
               ? "Saving..."

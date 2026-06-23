@@ -1,35 +1,49 @@
 import PaginationControls from "@/components/page/home/PaginationControls";
-import {StatusUpdateSwitch, TableAction} from "@/components/page/home/TableAction";
+import { Button } from "@/components/ui/button";
+import { Plus, ClipboardList } from "lucide-react";
+import Link from "next/link";
+import {
+  SelectAllCheckBox,
+  SelectSingleCheckBox,
+  StatusUpdateSwitch,
+  TableAction,
+} from "@/components/page/home/TableAction";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { api } from "@/trpc/server";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from '@/components/ui/switch';
+import { Switch } from "@/components/ui/switch";
 
+type Props = {
+  page: number;
+  status: "all" | "active" | "inactive" | null;
+  sortBY: "name" | "createdAt" | "startAt" | "endAt" | null;
+  sortDir: "asc" | "desc" | null;
+};
 export default async function PreorderTable({
   page,
   status,
   sortBY,
   sortDir,
-}: {
-  page: number;
-  status: "all" | "active" | "inactive" | null;
-  sortBY: "name" | "createdAt" | "startAt" | "endAt" | null;
-  sortDir: "asc" | "desc" | null;
-}) {
+}: Props) {
   const { preorders, totalCount, limit } = await api.preorder.getAll({
     page,
     status: status ?? undefined,
     sortBY: sortBY ?? undefined,
     sortDir: sortDir ?? undefined,
   });
+
+  if (preorders.length === 0) {
+    return <EmptyPreOrder />;
+  }
+
   return (
     <>
       {/* Preorder Table */}
@@ -37,9 +51,7 @@ export default async function PreorderTable({
         <TableHeader>
           <TableRow className="border-b border-neutral-200 bg-neutral-50/50 hover:bg-neutral-50/50 dark:border-neutral-800 dark:bg-neutral-900/50 dark:hover:bg-neutral-900/50 [&>th]:px-4 [&>th]:py-2 [&>th]:text-xs [&>th]:font-semibold [&>th]:tracking-wider [&>th]:text-neutral-500 [&>th]:uppercase [&>th]:dark:text-neutral-400">
             <TableHead className="w-12 text-center align-middle">
-              <div className="flex items-center justify-center">
-                <Checkbox className="cursor-pointer" />
-              </div>
+              <SelectAllCheckBox preOrders={preorders} />
             </TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Products</TableHead>
@@ -54,9 +66,7 @@ export default async function PreorderTable({
           {preorders.map((item, idx) => (
             <TableRow key={idx}>
               <TableCell className="px-6 py-4 text-center align-middle">
-                <div className="flex items-center justify-center">
-                  <Checkbox className="cursor-pointer" />
-                </div>
+                <SelectSingleCheckBox id={item.id} />
               </TableCell>
               <TableCell className="px-4 py-4">
                 <span className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
@@ -66,8 +76,8 @@ export default async function PreorderTable({
               <TableCell className="px-4 py-4 text-sm text-neutral-600 dark:text-neutral-300">
                 {item.products}
               </TableCell>
-              <TableCell className="px-4 py-4 text-sm lowercase text-neutral-600 dark:text-neutral-300">
-                {item.type.replaceAll('_','-')}
+              <TableCell className="px-4 py-4 text-sm text-neutral-600 lowercase dark:text-neutral-300">
+                {item.type.replaceAll("_", "-")}
               </TableCell>
               <TableCell className="px-4 py-4 text-sm text-neutral-600 dark:text-neutral-300">
                 {item.startsAt.toDateString()}
@@ -76,7 +86,7 @@ export default async function PreorderTable({
                 {item.endsAt?.toDateString() || "—"}
               </TableCell>
               <TableCell className="px-4 py-4">
-               <StatusUpdateSwitch  id={item.id} isActive={item.isActive}/>
+                <StatusUpdateSwitch id={item.id} isActive={item.isActive} />
               </TableCell>
               <TableCell className="px-4 py-4">
                 <TableAction id={item.id} name={item.name} />
@@ -91,9 +101,6 @@ export default async function PreorderTable({
     </>
   );
 }
-
-
-
 
 export const PreorderTableSkelton = () => {
   return (
@@ -116,7 +123,7 @@ export const PreorderTableSkelton = () => {
           </TableRow>
         </TableHeader>
         <TableBody className="divide-y divide-neutral-200 dark:divide-neutral-800">
-          {Array.from({ length: 10}).map((_, idx) => (
+          {Array.from({ length: 10 }).map((_, idx) => (
             <TableRow key={idx}>
               <TableCell className="px-6 py-4 text-center align-middle">
                 <div className="flex items-center justify-center">
@@ -160,5 +167,30 @@ export const PreorderTableSkelton = () => {
         <Skeleton className="h-8 w-8 rounded-md" />
       </div>
     </>
+  );
+};
+
+
+const EmptyPreOrder = () => {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 mb-4">
+        <ClipboardList className="h-6 w-6" />
+      </div>
+      <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+        No preorders found
+      </h3>
+      <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 max-w-sm">
+        Start creating preorders to manage your campaigns, products, and schedules.
+      </p>
+      <div className="mt-6">
+        <Button size="sm" asChild className="cursor-pointer">
+          <Link href="/preorder">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Preorder
+          </Link>
+        </Button>
+      </div>
+    </div>
   );
 };

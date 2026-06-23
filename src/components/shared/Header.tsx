@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 
 export default function Header() {
   const { setTheme } = useTheme();
@@ -16,11 +17,11 @@ export default function Header() {
   return (
     <header className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center space-x-3">
+        <Link href="/" className="flex items-center space-x-3">
           <span className="text-xl font-bold tracking-tight text-neutral-950 dark:text-white">
             Xubitar
           </span>
-        </div>
+        </Link>
         <div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

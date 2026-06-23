@@ -1,29 +1,61 @@
-# Create T3 App
+# Getting Started
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+## Setup
 
-## What's next? How do I make an app with this?
+1. **Clone or extract** the project files.
+2. **Install dependencies**:
+   ```bash
+   pnpm install
+   ```
+3. **Set up the database**:
+   ```bash
+   pnpm db:push
+   pnpm db:generate
+   ```
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+## Running the Application
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+To start the development server:
+```bash
+pnpm dev
+```
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+## Database Seeding
 
-## Learn More
+To seed the database with initial/mock data:
+```bash
+pnpm db:seed
+```
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+Requirements
+1. Preorder List Page (refer to UI-1.png)
+The page should list all preorders. The following must be handled on the backend (from the database), not on the client only:
+- Filters: All, Active, Inactive ✅
+- Sort (the sort options are shown in UI-2.png) ✅
+- Pagination ✅
+If no preorders are found, you may display an empty state in the table in whatever way you see fit.
 
-## How do I deploy this?
+2. Status Switch and Delete 
+- The status switch (Active / Inactive) should update the record directly in the database and reflect the change with clear feedback on the frontend.✅
+- The delete button should remove the record from the database and reflect in the list.✅
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+3. Selection Checkboxes
+- The row checkbox should work.✅
+- The select all checkbox should also work.✅
+- No action buttons need for selection✅ (I show selected count in footer)
+
+4. Update Preorder (refer to UI-3.png)
+- Clicking the pencil icon on a preorder should open the Update Preorder page.✅
+- All fields must be pre-filled with that preorder's existing values.✅
+- Saving should update the preorder in the database accordingly.✅
+
+5. Create Preorder
+- Clicking Create Preorder on the list page (UI-1.png) should open the create page (UI-3.png).✅
+- This page should be able to create a new preorder record in the database.✅
+
+6. Navigation and Loading States (on the create and update page, UI-3.png)
+- The Cancel button and the Save Changes button should redirect to the list page (UI-1.png) after a successful database update.✅
+- A loader state must be shown while saving.✅
+- The Back button should also redirect to the list page (UI-1.png).✅
