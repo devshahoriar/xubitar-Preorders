@@ -1,6 +1,7 @@
 import FilterTabsBar from "@/components/page/home/FilterTabsBar";
-import PreorderTable from "@/components/page/home/PreorderTable";
+import PreorderTable, { PreorderTableSkelton } from "@/components/page/home/PreorderTable";
 import { loadSearchParams } from "@/components/page/home/searchParams";
+import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
@@ -34,12 +35,14 @@ export default async function Page({ searchParams }: PageProps) {
         <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
           {/* Filter Tabs Bar */}
           <FilterTabsBar />
-          <PreorderTable
-            page={page}
-            status={status}
-            sortBY={sortBY}
-            sortDir={sortDir}
-          />
+          <Suspense fallback={<PreorderTableSkelton />}>
+            <PreorderTable
+              page={page}
+              status={status}
+              sortBY={sortBY}
+              sortDir={sortDir}
+            />
+          </Suspense>
         </div>
       </div>
     </main>

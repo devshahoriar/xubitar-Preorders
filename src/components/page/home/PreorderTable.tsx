@@ -1,5 +1,5 @@
 import PaginationControls from "@/components/page/home/PaginationControls";
-import TableAction from "@/components/page/home/TableAction";
+import {StatusUpdateSwitch, TableAction} from "@/components/page/home/TableAction";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
     Table,
@@ -10,6 +10,8 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { api } from "@/trpc/server";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from '@/components/ui/switch';
 
 export default async function PreorderTable({
   page,
@@ -64,8 +66,8 @@ export default async function PreorderTable({
               <TableCell className="px-4 py-4 text-sm text-neutral-600 dark:text-neutral-300">
                 {item.products}
               </TableCell>
-              <TableCell className="px-4 py-4 text-sm text-neutral-600 dark:text-neutral-300">
-                {item.type}
+              <TableCell className="px-4 py-4 text-sm lowercase text-neutral-600 dark:text-neutral-300">
+                {item.type.replaceAll('_','-')}
               </TableCell>
               <TableCell className="px-4 py-4 text-sm text-neutral-600 dark:text-neutral-300">
                 {item.startsAt.toDateString()}
@@ -74,25 +76,10 @@ export default async function PreorderTable({
                 {item.endsAt?.toDateString() || "—"}
               </TableCell>
               <TableCell className="px-4 py-4">
-                <div className="flex items-center justify-center">
-                  {/* Custom Status Toggle mimicking screenshot */}
-                  <div
-                    className={`flex h-6 w-11 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 ${
-                      item.isActive
-                        ? "bg-neutral-900 dark:bg-white"
-                        : "bg-neutral-200 dark:bg-neutral-700"
-                    }`}
-                  >
-                    <div
-                      className={`h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200 dark:bg-neutral-950 ${
-                        item.isActive ? "translate-x-5" : "translate-x-0"
-                      }`}
-                    />
-                  </div>
-                </div>
+               <StatusUpdateSwitch  id={item.id} isActive={item.isActive}/>
               </TableCell>
               <TableCell className="px-4 py-4">
-                <TableAction />
+                <TableAction id={item.id} name={item.name} />
               </TableCell>
             </TableRow>
           ))}
@@ -104,3 +91,74 @@ export default async function PreorderTable({
     </>
   );
 }
+
+
+
+
+export const PreorderTableSkelton = () => {
+  return (
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow className="border-b border-neutral-200 bg-neutral-50/50 hover:bg-neutral-50/50 dark:border-neutral-800 dark:bg-neutral-900/50 dark:hover:bg-neutral-900/50 [&>th]:px-4 [&>th]:py-2 [&>th]:text-xs [&>th]:font-semibold [&>th]:tracking-wider [&>th]:text-neutral-500 [&>th]:uppercase [&>th]:dark:text-neutral-400">
+            <TableHead className="w-12 text-center align-middle">
+              <div className="flex items-center justify-center">
+                <Checkbox className="cursor-pointer" disabled />
+              </div>
+            </TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Products</TableHead>
+            <TableHead>Preorder when</TableHead>
+            <TableHead>Starts at</TableHead>
+            <TableHead>Ends at</TableHead>
+            <TableHead className="text-center">Status</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody className="divide-y divide-neutral-200 dark:divide-neutral-800">
+          {Array.from({ length: 10}).map((_, idx) => (
+            <TableRow key={idx}>
+              <TableCell className="px-6 py-4 text-center align-middle">
+                <div className="flex items-center justify-center">
+                  <Checkbox className="cursor-pointer" disabled />
+                </div>
+              </TableCell>
+              <TableCell className="px-4 py-4">
+                <Skeleton className="h-4 w-40" />
+              </TableCell>
+              <TableCell className="px-4 py-4">
+                <Skeleton className="h-4 w-12" />
+              </TableCell>
+              <TableCell className="px-4 py-4">
+                <Skeleton className="h-4 w-28" />
+              </TableCell>
+              <TableCell className="px-4 py-4">
+                <Skeleton className="h-4 w-24" />
+              </TableCell>
+              <TableCell className="px-4 py-4">
+                <Skeleton className="h-4 w-24" />
+              </TableCell>
+              <TableCell className="px-4 py-4">
+                <div className="flex items-center justify-center">
+                  <Skeleton className="h-6 w-11 rounded-full" />
+                </div>
+              </TableCell>
+              <TableCell className="px-4 py-4">
+                <div className="flex justify-end">
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      {/* Pagination Skeleton */}
+      <div className="flex items-center justify-center gap-4 border-t border-neutral-200 bg-neutral-50/50 p-4 dark:border-neutral-800 dark:bg-neutral-900/50">
+        <Skeleton className="h-8 w-8 rounded-md" />
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="h-8 w-8 rounded-md" />
+      </div>
+    </>
+  );
+};

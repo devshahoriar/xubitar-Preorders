@@ -52,6 +52,16 @@ const preOrderRouter = createTRPCRouter({
       limit: take
     };
   }),
+  getById: publicProcedure.input(z.object({
+    id: z.string(),
+  })).query(async ({ ctx, input }) => {
+    const id = input.id
+    if (id === '') return undefined
+    const preorder = await ctx.db.preorder.findUnique({
+      where: { id },
+    });
+    return preorder;
+  }),
   create: publicProcedure
     .input(preorderFormSchema)
     .mutation(async ({ ctx, input }) => {
@@ -68,15 +78,39 @@ const preOrderRouter = createTRPCRouter({
     }),
   edit: publicProcedure
     .input(
-      preorderFormSchema.extend({
+      preorderFormSchema.partial().extend({
         id: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // first search previous
+      const prev = await ctx.db.preorder.findUnique({
+        where: { id: input.id },
+      });
+      if (!prev) {
+        throw new Error("Preorder not found");
+      }
+      // than update
+      const newName = input.name ?? prev.name;
+      const newProducts = input.products ?? prev.products;
+      const newType = input.preorderWhen
+        ? (input.preorderWhen === "regardless-of-stock" ? "REGARDLESS_OF_STOCK" : "OUT_OF_STOCK")
+        : prev.type;
+      const newStartsAt = input.startsAt ? new Date(input.startsAt) : prev.startsAt;
+      const newEndsAt = input.endsAt !== undefined
+        ? (input.endsAt ? new Date(input.endsAt) : null)
+        : prev.endsAt;
+      const newIsActive = input.isActive ?? prev.isActive;
+
       return ctx.db.preorder.update({
         where: { id: input.id },
         data: {
-          name: input.name,
+          name: newName,
+          products: newProducts,
+          type: newType,
+          startsAt: newStartsAt,
+          endsAt: newEndsAt,
+          isActive: newIsActive,
         },
       });
     }),

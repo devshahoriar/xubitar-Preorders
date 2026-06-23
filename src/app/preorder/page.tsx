@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import preorderFormSchema from "@/components/page/preorder/formSchema";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,19 +22,45 @@ import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { api } from "@/trpc/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function PreorderPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("id");
+  const util = api.useUtils();
+  const { data: preorderData, isLoading } = api.preorder.getById.useQuery(
+    {
+      id: editId ?? "",
+    },
+    {
+      enabled: !!editId,
+    },
+  );
 
   const createPreorder = api.preorder.create.useMutation({
     onSuccess: () => {
       toast.success("Preorder saved successfully!");
+
       router.push("/");
       router.refresh();
     },
     onError: (err) => {
       toast.error("Failed to save preorder", {
+        description: err.message,
+      });
+    },
+  });
+
+  const editPreorder = api.preorder.edit.useMutation({
+    onSuccess: () => {
+      toast.success("Preorder updated successfully!");
+      util.preorder.getById.invalidate();
+      router.push("/");
+      router.refresh();
+    },
+    onError: (err) => {
+      toast.error("Failed to update preorder", {
         description: err.message,
       });
     },
@@ -54,33 +81,67 @@ export default function PreorderPage() {
       onChange: preorderFormSchema,
     },
     onSubmit: async ({ value }) => {
-      createPreorder.mutate(value);
+      if (editId) {
+        await editPreorder.mutateAsync({ id: editId, ...value });
+      } else {
+        await createPreorder.mutateAsync(value);
+      }
     },
   });
+
+  useEffect(() => {
+    if (preorderData) {
+      form.reset({
+        name: preorderData.name,
+        products: preorderData.products,
+        preorderWhen:
+          preorderData.type === "REGARDLESS_OF_STOCK"
+            ? "regardless-of-stock"
+            : "out-of-stock",
+        startsAt: preorderData.startsAt
+          ? new Date(preorderData.startsAt).toISOString().slice(0, 16)
+          : "",
+        endsAt: preorderData.endsAt
+          ? new Date(preorderData.endsAt).toISOString().slice(0, 16)
+          : "",
+        isActive: preorderData.isActive,
+      });
+    }
+  }, [preorderData]);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Top Action Bar */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <Button variant="outline" asChild className="cursor-pointer">
-            <Link href="/" className="flex items-center gap-1.5 font-semibold">
-              <ChevronLeft className="h-4 w-4" />
-              Back
-            </Link>
+          <Button
+            variant="outline"
+            onClick={() => router.back()}
+            className="cursor-pointer space-y-1"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back
           </Button>
         </div>
         <div className="flex items-center space-x-3">
-          <Button variant="outline" asChild className="cursor-pointer">
-            <Link href="/">Cancel</Link>
+          <Button
+            variant="outline"
+            onClick={() => router.back()}
+            className="cursor-pointer"
+          >
+            Cancel
           </Button>
           <Button
             type="submit"
             form="preorder-form"
             className="cursor-pointer font-semibold"
-            disabled={createPreorder.isPending}
+            disabled={
+              createPreorder.isPending || editPreorder.isPending || isLoading
+            }
           >
-            {createPreorder.isPending ? "Saving..." : "Save changes"}
+            {createPreorder.isPending || editPreorder.isPending
+              ? "Saving..."
+              : "Save changes"}
           </Button>
         </div>
       </div>
@@ -145,6 +206,7 @@ export default function PreorderPage() {
                       onChange={(e) => field.handleChange(e.target.value)}
                       className="h-9 max-w-md border-neutral-200 bg-transparent dark:border-neutral-700"
                       aria-invalid={isInvalid}
+                      disabled={isLoading}
                     />
                   </div>
                 </Field>
@@ -194,6 +256,7 @@ export default function PreorderPage() {
                       }}
                       className="h-9 w-24 border-neutral-200 bg-transparent text-center dark:border-neutral-700"
                       aria-invalid={isInvalid}
+                      disabled={isLoading}
                     />
                     <span className="text-xs text-neutral-500 dark:text-neutral-400">
                       product(s)
@@ -237,6 +300,7 @@ export default function PreorderPage() {
                     <Select
                       value={field.state.value}
                       onValueChange={(val) => field.handleChange(val as any)}
+                      disabled={isLoading}
                     >
                       <SelectTrigger
                         id={field.name}
@@ -305,6 +369,7 @@ export default function PreorderPage() {
                       onChange={(e) => field.handleChange(e.target.value)}
                       className="h-9 border-neutral-200 bg-transparent dark:border-neutral-700"
                       aria-invalid={isInvalid}
+                      disabled={isLoading}
                     />
                   </div>
                 </Field>
@@ -352,6 +417,7 @@ export default function PreorderPage() {
                       onChange={(e) => field.handleChange(e.target.value)}
                       className="h-9 border-neutral-200 bg-transparent placeholder:text-neutral-400 dark:border-neutral-700 dark:placeholder:text-neutral-600"
                       aria-invalid={isInvalid}
+                      disabled={isLoading}
                     />
                   </div>
                 </Field>
@@ -392,12 +458,15 @@ export default function PreorderPage() {
                     <button
                       id={field.name}
                       type="button"
-                      onClick={() => field.handleChange(!field.state.value)}
-                      className={`flex h-6 w-11 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 ${
+                      disabled={isLoading}
+                      onClick={() =>
+                        !isLoading && field.handleChange(!field.state.value)
+                      }
+                      className={`flex h-6 w-11 items-center rounded-full p-1 transition-colors duration-200 ${
                         field.state.value
                           ? "bg-neutral-900 dark:bg-white"
                           : "bg-neutral-200 dark:bg-neutral-700"
-                      }`}
+                      } ${isLoading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
                       aria-label="Toggle active status"
                     >
                       <div
@@ -418,16 +487,24 @@ export default function PreorderPage() {
 
         {/* Card Footer */}
         <div className="flex items-center justify-end space-x-3 border-t border-neutral-200 bg-neutral-50/50 px-6 py-4 dark:border-neutral-800 dark:bg-neutral-900/50">
-          <Button variant="outline" asChild className="cursor-pointer">
-            <Link href="/">Cancel</Link>
+          <Button
+            variant="outline"
+            onClick={() => router.back()}
+            className="cursor-pointer"
+          >
+            Cancel
           </Button>
           <Button
             type="submit"
             form="preorder-form"
             className="cursor-pointer font-semibold"
-            disabled={createPreorder.isPending}
+            disabled={
+              createPreorder.isPending || editPreorder.isPending || isLoading
+            }
           >
-            {createPreorder.isPending ? "Saving..." : "Save changes"}
+            {createPreorder.isPending || editPreorder.isPending
+              ? "Saving..."
+              : "Save changes"}
           </Button>
         </div>
       </div>
