@@ -10,20 +10,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
-import { useQueryStates, parseAsInteger, parseAsStringEnum } from 'nuqs';
+import useHomeParams from "./useHomeParams";
 
 export default function FilterTabsBar() {
-  const [params, setParams] = useQueryStates(
-    {
-      page: parseAsInteger.withDefault(1),
-      status: parseAsStringEnum(["all", "active", "inactive"]).withDefault("all"),
-      sortBY: parseAsStringEnum(["name", "createdAt", "startAt", "endAt"]).withDefault("createdAt"),
-      sortDir: parseAsStringEnum(["asc", "desc"]).withDefault("desc"),
-    },
-    {
-      history: 'replace',
-    }
-  );
+  const [params, setParams] = useHomeParams();
 
   return (
     <div className="flex flex-wrap items-center justify-between border-b border-neutral-200 p-4 dark:border-neutral-800">

@@ -5,6 +5,7 @@ import z from "zod";
 const preOrderRouter = createTRPCRouter({
   getAll: publicProcedure.input(z.object({
     page: z.coerce.number().default(1),
+    limit: z.coerce.number().default(10),
     status: z.enum(["all", "active", "inactive"]).default('all'),
     sortBY: z.enum(["name", "createdAt", "startAt", "endAt"]).default('createdAt'),
     sortDir: z.enum(["asc", "desc"]).default('desc'),
@@ -16,18 +17,18 @@ const preOrderRouter = createTRPCRouter({
       where.isActive = false;
     }
 
-    let orderByField = input.sortBY;
-    if (orderByField === "startAt") {
-      orderByField = "startsAt";
-    } else if (orderByField === "endAt") {
-      orderByField = "endsAt";
-    }
+    const orderByField: "name" | "createdAt" | "startsAt" | "endsAt" =
+      input.sortBY === "startAt"
+        ? "startsAt"
+        : input.sortBY === "endAt"
+          ? "endsAt"
+          : input.sortBY;
 
     const orderBy = {
       [orderByField]: input.sortDir,
     };
 
-    const take = 10;
+    const take = input.limit;
     const skip = (input.page - 1) * take;
 
     const [preorders, totalCount] = await Promise.all([
@@ -48,6 +49,7 @@ const preOrderRouter = createTRPCRouter({
       isHaveNextPage: input.page < totalPages,
       totalPage: totalPages,
       totalCount,
+      limit: take
     };
   }),
   create: publicProcedure
