@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useForm } from "@tanstack/react-form";
+import { useForm, useStore } from "@tanstack/react-form";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/trpc/react";
@@ -92,6 +92,9 @@ export default function PreorderPage() {
     },
   });
 
+
+  const isDirty = useStore(form.store, (state) => state.isDirty);
+
   useEffect(() => {
     if (preorderData) {
       form.reset({
@@ -144,7 +147,7 @@ export default function PreorderPage() {
             form="preorder-form"
             className="cursor-pointer font-semibold"
             disabled={
-              createPreorder.isPending || editPreorder.isPending || isLoading
+              loading || !isDirty
             }
           >
             {createPreorder.isPending || editPreorder.isPending
@@ -215,6 +218,7 @@ export default function PreorderPage() {
                       className="h-9 max-w-md border-neutral-200 bg-transparent dark:border-neutral-700"
                       aria-invalid={isInvalid}
                       disabled={isLoading}
+                      placeholder="Name"
                     />
                   </div>
                 </Field>
@@ -506,7 +510,7 @@ export default function PreorderPage() {
             type="submit"
             form="preorder-form"
             className="cursor-pointer font-semibold"
-            disabled={loading}
+            disabled={loading || !isDirty}
           >
             {createPreorder.isPending || editPreorder.isPending
               ? "Saving..."
